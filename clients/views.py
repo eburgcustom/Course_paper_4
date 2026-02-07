@@ -15,9 +15,9 @@ from .forms import MailingForm, MessageForm, RecipientForm
 
 def home(request):
     total_mailings = Mailing.objects.count()
+    # Активные и запланированные рассылки
     active_mailings = Mailing.objects.filter(
-        status=Mailing.STARTED,
-        start_time__lte=timezone.now(),
+        status__in=[Mailing.STARTED, Mailing.CREATED],
         end_time__gte=timezone.now()
     ).count()
 
@@ -25,12 +25,20 @@ def home(request):
         mailings__isnull=False
     ).distinct().count()
 
+    # Статистика отправок
+    total_attempts = MailingAttempt.objects.count()
+    successful_attempts = MailingAttempt.objects.filter(status=MailingAttempt.SUCCESS).count()
+    failed_attempts = MailingAttempt.objects.filter(status=MailingAttempt.FAILED).count()
+
     latest_mailings = Mailing.objects.order_by('-created_at')[:5]
 
     context = {
         'total_mailings': total_mailings,
         'active_mailings': active_mailings,
         'unique_recipients': unique_recipients,
+        'total_attempts': total_attempts,
+        'successful_attempts': successful_attempts,
+        'failed_attempts': failed_attempts,
         'latest_mailings': latest_mailings,
     }
     return render(request, 'clients/home.html', context)

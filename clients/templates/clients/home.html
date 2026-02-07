@@ -1,11 +1,12 @@
 {% extends "clients/base.html" %}
+{% load math_filters %}
 
 {% block content %}
 <div class="container mt-5">
     <h1 class="mb-4">Статистика рассылок</h1>
 
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-white bg-primary mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Всего рассылок</h5>
@@ -13,19 +14,56 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-white bg-success mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Активные рассылки</h5>
+                    <h5 class="card-title">Активные и запланированные</h5>
                     <p class="card-text display-4">{{ active_mailings }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-white bg-info mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Уникальные получатели</h5>
                     <p class="card-text display-4">{{ unique_recipients }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Всего отправок</h5>
+                    <p class="card-text display-4">{{ total_attempts }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Успешные отправки</h5>
+                    <p class="card-text display-4">{{ successful_attempts }}</p>
+                    {% if total_attempts > 0 %}
+                        <small class="text-white-50">
+                            Успешность: {{ successful_attempts|mul:100|div:total_attempts|floatformat:1 }}%
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Неуспешные отправки</h5>
+                    <p class="card-text display-4">{{ failed_attempts }}</p>
+                    {% if total_attempts > 0 %}
+                        <small class="text-white-50">
+                            Процент ошибок: {{ failed_attempts|mul:100|div:total_attempts|floatformat:1 }}%
+                        </small>
+                    {% endif %}
                 </div>
             </div>
         </div>
