@@ -24,6 +24,11 @@
                     Запустить рассылку
                 </button>
             </form>
+            <a href="{% url 'clients:mailing_delete' object.id %}" 
+               class="btn btn-outline-danger btn-sm"
+               onclick="return confirm('Вы уверены, что хотите удалить эту рассылку? Это действие необратимо.')">
+                <i class="bi bi-trash"></i> Удалить
+            </a>
             <a href="{% url 'clients:mailing_list' %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Назад к списку
             </a>
@@ -216,6 +221,13 @@ $(document).ready(function() {
                 'Content-Type': 'application/json',
             },
             success: function(response) {
+                // Если сервер вернул HTML (перенаправление), перезагружаем страницу
+                if (typeof response === 'string' && response.includes('<!DOCTYPE')) {
+                    window.location.reload();
+                    return;
+                }
+                
+                // Если вернулся JSON (старый формат)
                 if (response.status === 'success') {
                     // Обновляем статус на странице
                     $('.badge').removeClass('bg-secondary').addClass('bg-primary').text('Запущена');
@@ -225,9 +237,6 @@ $(document).ready(function() {
 
                     // Показываем уведомление об успехе
                     showAlert('Рассылка успешно запущена!', 'success');
-
-                    // Обновляем логи
-                    updateLogs();
                 } else {
                     showAlert(response.message || 'Произошла ошибка', 'danger');
                     $button.prop('disabled', false).html('<i class="bi bi-send"></i> Отправить сейчас');
