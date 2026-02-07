@@ -1,0 +1,34 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Активация аккаунта{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Активация аккаунта</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h4>Здравствуйте, {{ user.username }}!</h4>
+                    <p>Спасибо за регистрацию в нашей системе рассылок.</p>
+                    <p>Пожалуйста, нажмите на кнопку ниже, чтобы активировать ваш аккаунт:</p>
+                </div>
+                
+                <div class="text-center">
+                    <a href="http://{{ domain }}{% url 'users:activate' uid token %}" class="btn btn-success btn-lg">
+                        Активировать аккаунт
+                    </a>
+                </div>
+                
+                <div class="mt-3">
+                    <p class="text-muted small">
+                        Если вы не регистрировались в нашей системе, просто проигнорируйте это письмо.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

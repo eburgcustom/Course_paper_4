@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 
-from .models import Mailing, Message, Recipient
+from .models import Mailing, Message, Recipient, MailingAttempt
 from .forms import MailingForm, MessageForm, RecipientForm
 
 
@@ -49,7 +49,7 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
     model = Mailing
     form_class = MailingForm
     template_name = 'clients/mailing_form.html'
-    success_url = reverse_lazy('mailing_list')
+    success_url = reverse_lazy('clients:mailing_list')
 
     def form_valid(self, form):
         form.instance.status = Mailing.CREATED
@@ -66,7 +66,7 @@ class MailingUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         messages.success(self.request, 'Рассылка успешно обновлена!')
-        return reverse('mailing_detail', kwargs={'pk': self.object.pk})
+        return reverse('clients:mailing_detail', kwargs={'pk': self.object.pk})
 
 
 class MailingDetailView(LoginRequiredMixin, DetailView):
@@ -126,10 +126,8 @@ def send_mailing_now(request, pk):
     mailing.status = Mailing.COMPLETED
     mailing.save()
 
-    return JsonResponse({
-        'status': 'success',
-        'message': f'Рассылка завершена. Успешно: {success_count}, Ошибок: {error_count}'
-    })
+    messages.success(request, f'Рассылка завершена. Успешно: {success_count}, Ошибок: {error_count}')
+    return redirect('clients:mailing_detail', pk=mailing.pk)
 
 
 # Остальные представления остаются без изменений
@@ -146,7 +144,7 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
     model = Message
     form_class = MessageForm
     template_name = 'clients/message_form.html'
-    success_url = reverse_lazy('message_list')
+    success_url = reverse_lazy('clients:message_list')
 
 
 class MessageUpdateView(LoginRequiredMixin, UpdateView):
@@ -154,7 +152,7 @@ class MessageUpdateView(LoginRequiredMixin, UpdateView):
     model = Message
     form_class = MessageForm
     template_name = 'clients/message_form.html'
-    success_url = reverse_lazy('message_list')
+    success_url = reverse_lazy('clients:message_list')
 
 
 class RecipientListView(LoginRequiredMixin, ListView):
@@ -170,7 +168,14 @@ class RecipientCreateView(LoginRequiredMixin, CreateView):
     model = Recipient
     form_class = RecipientForm
     template_name = 'clients/recipient_form.html'
-    success_url = reverse_lazy('recipient_list')
+    success_url = reverse_lazy('clients:recipient_list')
+
+    def get_success_url(self):
+        """Сохраняем параметр next при перенаправлении."""
+        next_url = self.request.GET.get('next')
+        if next_url:
+            return f"{self.success_url}?next={next_url}"
+        return self.success_url
 
 
 class RecipientUpdateView(LoginRequiredMixin, UpdateView):
@@ -178,14 +183,28 @@ class RecipientUpdateView(LoginRequiredMixin, UpdateView):
     model = Recipient
     form_class = RecipientForm
     template_name = 'clients/recipient_form.html'
-    success_url = reverse_lazy('recipient_list')
+    success_url = reverse_lazy('clients:recipient_list')
+
+    def get_success_url(self):
+        """Сохраняем параметр next при перенаправлении."""
+        next_url = self.request.GET.get('next')
+        if next_url:
+            return f"{self.success_url}?next={next_url}"
+        return self.success_url
 
 
 class RecipientDeleteView(LoginRequiredMixin, DeleteView):
     """Удаление получателя."""
     model = Recipient
     template_name = 'clients/recipient_confirm_delete.html'
-    success_url = reverse_lazy('recipient_list')
+    success_url = reverse_lazy('clients:recipient_list')
+
+    def get_success_url(self):
+        """Сохраняем параметр next при перенаправлении."""
+        next_url = self.request.GET.get('next')
+        if next_url:
+            return f"{self.success_url}?next={next_url}"
+        return self.success_url
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Получатель успешно удален!')
@@ -196,7 +215,7 @@ class MessageDeleteView(LoginRequiredMixin, DeleteView):
     """Удаление сообщения."""
     model = Message
     template_name = 'clients/message_confirm_delete.html'
-    success_url = reverse_lazy('message_list')
+    success_url = reverse_lazy('clients:message_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Сообщение успешно удалено!')
@@ -207,7 +226,7 @@ class MailingDeleteView(LoginRequiredMixin, DeleteView):
     """Удаление рассылки."""
     model = Mailing
     template_name = 'clients/mailing_confirm_delete.html'
-    success_url = reverse_lazy('mailing_list')
+    success_url = reverse_lazy('clients:mailing_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Рассылка успешно удалена!')

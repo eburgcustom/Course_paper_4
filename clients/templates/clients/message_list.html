@@ -1,0 +1,121 @@
+{% extends 'clients/base.html' %}
+
+{% block title %}Сообщения{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-envelope"></i> Сообщения</h2>
+    <div>
+        {% if request.GET.next %}
+            <a href="{{ request.GET.next }}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Вернуться к рассылке
+            </a>
+        {% endif %}
+        <a href="{% url 'clients:message_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Создать сообщение
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Тема</th>
+                            <th>Создано</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in messages %}
+                            <tr>
+                                <td>
+                                    <strong>{{ message.subject }}</strong>
+                                    <div class="text-muted small mt-1">
+                                        {{ message.body|truncatewords:15 }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ message.created_at|date:"d.m.Y H:i" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'clients:message_update' message.pk %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'clients:message_delete' message.pk %}" 
+                                           class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if is_paginated %}
+        <nav aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; Первая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_number }}">Предыдущая</a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_number }}">Следующая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+
+{% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="bi bi-envelope display-1 text-muted"></i>
+        </div>
+        <h4 class="text-muted">Пока нет сообщений</h4>
+        <p class="text-muted">Создайте первое сообщение для использования в рассылках</p>
+        <div>
+            {% if request.GET.next %}
+                <a href="{{ request.GET.next }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Вернуться к рассылке
+                </a>
+            {% endif %}
+            <a href="{% url 'clients:message_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Создать сообщение
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

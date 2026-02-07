@@ -1,0 +1,76 @@
+{% extends 'clients/base.html' %}
+
+{% block title %}{% if object %}Редактирование сообщения{% else %}Новое сообщение{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">
+            <i class="bi bi-{% if object %}pencil-square{% else %}plus-circle{% endif %}"></i>
+            {% if object %}Редактирование сообщения{% else %}Новое сообщение{% endif %}
+        </h4>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <label class="form-label">
+                    {{ form.subject.label }}
+                    <span class="text-danger">*</span>
+                </label>
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.subject.errors|join:", " }}
+                    </div>
+                {% endif %}
+                <div class="form-text">
+                    Тема письма, которую увидят получатели
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">
+                    {{ form.body.label }}
+                    <span class="text-danger">*</span>
+                </label>
+                {{ form.body }}
+                {% if form.body.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.body.errors|join:", " }}
+                    </div>
+                {% endif %}
+                <div class="form-text">
+                    Текст сообщения. Можно использовать HTML-теги для форматирования.
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{% if object %}{% url 'clients:message_list' %}{% else %}{% if request.GET.next %}{{ request.GET.next }}{% else %}{% url 'clients:message_list' %}{% endif %}{% endif %}" 
+                       class="btn btn-secondary me-2">
+                        <i class="bi bi-arrow-left"></i> Назад
+                    </a>
+                    {% if request.GET.next %}
+                        <a href="{{ request.GET.next }}" class="btn btn-outline-info">
+                            <i class="bi bi-arrow-left"></i> Вернуться к рассылке
+                        </a>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Сохранить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
