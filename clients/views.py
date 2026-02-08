@@ -12,51 +12,18 @@ from django.utils import timezone
 from .models import Mailing, Message, Recipient, MailingAttempt
 from .forms import MailingForm, MessageForm, RecipientForm
 from .mixins import OwnerRequiredMixin, ManagerOrOwnerRequiredMixin, ManagerRequiredMixin
+from .services import StatisticsService, MailingService
 
 
 def home(request):
-    # Фильтруем данные в зависимости от роли пользователя
-    if request.user.is_manager():
-        total_mailings = Mailing.objects.count()
-        active_mailings = Mailing.objects.filter(
-            status__in=[Mailing.STARTED, Mailing.CREATED],
-            end_time__gte=timezone.now()
-        ).count()
-        unique_recipients = Recipient.objects.count()
-    else:
-        total_mailings = Mailing.objects.filter(owner=request.user).count()
-        active_mailings = Mailing.objects.filter(
-            owner=request.user,
-            status__in=[Mailing.STARTED, Mailing.CREATED],
-            end_time__gte=timezone.now()
-        ).count()
-        unique_recipients = Recipient.objects.filter(owner=request.user).count()
-
-    # Статистика отправок
-    if request.user.is_manager():
-        total_attempts = MailingAttempt.objects.count()
-        successful_attempts = MailingAttempt.objects.filter(status=MailingAttempt.SUCCESS).count()
-        failed_attempts = MailingAttempt.objects.filter(status=MailingAttempt.FAILED).count()
-    else:
-        total_attempts = MailingAttempt.objects.filter(mailing__owner=request.user).count()
-        successful_attempts = MailingAttempt.objects.filter(
-            mailing__owner=request.user,
-            status=MailingAttempt.SUCCESS
-        ).count()
-        failed_attempts = MailingAttempt.objects.filter(
-            mailing__owner=request.user,
-            status=MailingAttempt.FAILED
-        ).count()
-
+    # Получаем статистику через сервис
+    stats = StatisticsService.get_user_stats(request.user)
+    
+    # Получаем последние рассылки
     latest_mailings = Mailing.objects.all().order_by('-created_at')[:5]
 
     context = {
-        'total_mailings': total_mailings,
-        'active_mailings': active_mailings,
-        'unique_recipients': unique_recipients,
-        'total_attempts': total_attempts,
-        'successful_attempts': successful_attempts,
-        'failed_attempts': failed_attempts,
+        **stats,
         'latest_mailings': latest_mailings,
     }
     return render(request, 'clients/home.html', context)
@@ -70,10 +37,8 @@ class MailingListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        """Фильтруем рассылки в зависимости от роли пользователя."""
-        if self.request.user.is_manager():
-            return Mailing.objects.all()
-        return Mailing.objects.filter(owner=self.request.user)
+        """Фильтруем рассылки через сервис."""
+        return MailingService.get_user_mailings(self.request.user)
 
 
 class MailingCreateView(LoginRequiredMixin, CreateView):
@@ -88,6 +53,9 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         form.instance.owner = self.request.user
         response = super().form_valid(form)
         messages.success(self.request, 'Рассылка успешно создана!')
+        # Очищаем кеш через сервис
+        StatisticsService.clear_user_stats_cache(self.request.user)
+        MailingService.clear_mailings_cache(self.request.user)
         return response
 
 
@@ -99,6 +67,9 @@ class MailingUpdateView(ManagerOrOwnerRequiredMixin, UpdateView):
 
     def get_success_url(self):
         messages.success(self.request, 'Рассылка успешно обновлена!')
+        # Очищаем кеш через сервис
+        StatisticsService.clear_user_stats_cache(self.request.user)
+        MailingService.clear_mailings_cache(self.request.user)
         return reverse('clients:mailing_detail', kwargs={'pk': self.object.pk})
 
 
