@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.conf import settings
 
 
 class Mailing(models.Model):
@@ -24,6 +25,12 @@ class Mailing(models.Model):
         max_length=20,
         choices=STATUS_CHOICES,
         default=CREATED
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name='Владелец',
+        related_name='mailings'
     )
     message = models.ForeignKey(
         'Message',
@@ -98,6 +105,12 @@ class Recipient(models.Model):
         blank=True,
         help_text=_('Дополнительная информация о получателе')
     )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name='Владелец',
+        related_name='recipients'
+    )
     created_at = models.DateTimeField(_('Дата создания'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Дата обновления'), auto_now=True)
 
@@ -119,6 +132,12 @@ class Message(models.Model):
     body = models.TextField(
         'Тело письма',
         help_text='Введите текст письма'
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name='Владелец',
+        related_name='messages'
     )
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
     updated_at = models.DateTimeField('Дата обновления', auto_now=True)
