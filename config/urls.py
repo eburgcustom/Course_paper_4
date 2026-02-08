@@ -21,13 +21,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-
+    path("admin/", admin.site.urls),
     # Подключаем URL-адреса приложения clients
-    path('', include('clients.urls', namespace='clients')),
-
+    path("", include("clients.urls", namespace="clients")),
     # Аутентификация пользователей
-    path('', include('users.urls', namespace='users')),
+    path("", include("users.urls", namespace="users")),
 ]
 
 # Включение обслуживания медиафайлов в режиме отладки

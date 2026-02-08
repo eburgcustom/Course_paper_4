@@ -8,58 +8,59 @@ User = get_user_model()
 
 class CustomUserCreationForm(UserCreationForm):
     """Форма регистрации пользователя."""
+
     email = forms.EmailField(
-        label=_('Email'),
+        label=_("Email"),
         max_length=254,
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': _('Email')})
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": _("Email")}),
     )
     username = forms.CharField(
-        label=_('Username'),
+        label=_("Username"),
         max_length=150,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Username')})
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": _("Username")}),
     )
     password1 = forms.CharField(
-        label=_('Password'),
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': _('Password')})
+        label=_("Password"), widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": _("Password")})
     )
     password2 = forms.CharField(
-        label=_('Password confirmation'),
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': _('Confirm password')})
+        label=_("Password confirmation"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": _("Confirm password")}),
     )
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'password1', 'password2')
+        fields = ("email", "username", "password1", "password2")
 
 
 class CustomAuthenticationForm(AuthenticationForm):
     """Форма входа пользователя."""
+
     username = forms.EmailField(
-        label=_('Email'),
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': _('Email')})
+        label=_("Email"), widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": _("Email")})
     )
     password = forms.CharField(
-        label=_('Password'),
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': _('Password')})
+        label=_("Password"), widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": _("Password")})
     )
 
 
 class CustomPasswordResetForm(PasswordResetForm):
     """Форма восстановления пароля."""
+
     email = forms.EmailField(
-        label=_('Email'),
+        label=_("Email"),
         max_length=254,
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': _('Email')})
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": _("Email")}),
     )
 
 
 class CustomSetPasswordForm(SetPasswordForm):
     """Форма установки нового пароля."""
+
     new_password1 = forms.CharField(
-        label=_('New password'),
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': _('New password')})
+        label=_("New password"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": _("New password")}),
     )
     new_password2 = forms.CharField(
-        label=_('New password confirmation'),
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': _('Confirm new password')})
+        label=_("New password confirmation"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": _("Confirm new password")}),
     )

@@ -25,9 +25,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "attempt_time",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="Дата и время попытки"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="Дата и время попытки"),
                 ),
                 (
                     "status",
@@ -39,9 +37,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "server_response",
-                    models.TextField(
-                        blank=True, null=True, verbose_name="Ответ сервера"
-                    ),
+                    models.TextField(blank=True, null=True, verbose_name="Ответ сервера"),
                 ),
                 (
                     "mailing",
