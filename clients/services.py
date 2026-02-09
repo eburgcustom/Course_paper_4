@@ -9,6 +9,17 @@ class StatisticsService:
     @staticmethod
     def get_user_stats(user):
         """Получение статистики для пользователя с кешированием."""
+        # Проверяем, авторизован ли пользователь
+        if not user.is_authenticated:
+            return {
+                "total_mailings": 0,
+                "active_mailings": 0,
+                "unique_recipients": 0,
+                "total_attempts": 0,
+                "successful_attempts": 0,
+                "failed_attempts": 0,
+            }
+
         cache_key = f"user_stats_{user.id}_{user.role}"
         cached_stats = cache.get(cache_key)
 
@@ -49,6 +60,8 @@ class StatisticsService:
     @staticmethod
     def clear_user_stats_cache(user):
         """Очистка кеша статистики пользователя."""
+        if not user.is_authenticated:
+            return
         cache_key = f"user_stats_{user.id}_{user.role}"
         cache.delete(cache_key)
 
@@ -59,6 +72,10 @@ class MailingService:
     @staticmethod
     def get_user_mailings(user):
         """Получение рассылок пользователя с кешированием."""
+        # Проверяем, авторизован ли пользователь
+        if not user.is_authenticated:
+            return Mailing.objects.none()
+
         cache_key = f"user_mailings_{user.id}_{user.role}"
         cached_mailings = cache.get(cache_key)
 
@@ -77,5 +94,7 @@ class MailingService:
     @staticmethod
     def clear_mailings_cache(user):
         """Очистка кеша рассылок пользователя."""
+        if not user.is_authenticated:
+            return
         cache_key = f"user_mailings_{user.id}_{user.role}"
         cache.delete(cache_key)
