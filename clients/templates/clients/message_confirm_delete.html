@@ -1,0 +1,46 @@
+{% extends 'clients/base.html' %}
+
+{% block title %}Удаление сообщения{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0 text-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Удаление сообщения
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5>Вы уверены, что хотите удалить это сообщение?</h5>
+                    <p class="mb-2">
+                        <strong>Тема:</strong> {{ object.subject }}
+                    </p>
+                    <p class="mb-0">
+                        <strong>Текст:</strong><br>
+                        <small>{{ object.body|truncatewords:30 }}</small>
+                    </p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Внимание!</strong> Это действие необратимо. Сообщение будет удалено из всех рассылок.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'clients:message_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

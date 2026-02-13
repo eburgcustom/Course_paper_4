@@ -1,0 +1,58 @@
+{% extends 'clients/base.html' %}
+
+{% block title %}Удаление рассылки{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0 text-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Удаление рассылки
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5>Вы уверены, что хотите удалить эту рассылку?</h5>
+                    <p class="mb-2">
+                        <strong>Тема:</strong> {{ object.message.subject }}
+                    </p>
+                    <p class="mb-2">
+                        <strong>Статус:</strong> 
+                        <span class="badge bg-{{ object.status|yesno:'success,secondary,danger,warning,info' }}">
+                            {{ object.get_status_display }}
+                        </span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>Получателей:</strong> {{ object.recipients.count }}
+                    </p>
+                    <p class="mb-0">
+                        <strong>Создана:</strong> {{ object.created_at|date:"d.m.Y H:i" }}
+                    </p>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Внимание!</strong> Это действие необратимо. Будут удалены:
+                    <ul class="mb-0 mt-2">
+                        <li>Рассылка и все её данные</li>
+                        <li>Все логи отправки этой рассылки</li>
+                    </ul>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'clients:mailing_detail' object.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

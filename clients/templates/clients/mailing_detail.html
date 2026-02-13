@@ -1,0 +1,284 @@
+{% extends 'clients/base.html' %}
+
+{% block title %}Просмотр рассылки #{{ object.id }}{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+            <i class="bi bi-envelope"></i> Рассылка #{{ object.id }}
+        </h4>
+        <div class="btn-group">
+            <a href="{% url 'clients:mailing_update' object.id %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil"></i> Редактировать
+            </a>
+            {% if object.status != 'started' %}
+            <button type="button" class="btn btn-outline-success btn-sm send-mailing"
+                    data-url="{% url 'clients:send_mailing_now' object.id %}">
+                <i class="bi bi-send"></i> Отправить сейчас
+            </button>
+            {% endif %}
+            <form method="post" action="{% url 'clients:send_mailing_now' mailing.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    Запустить рассылку
+                </button>
+            </form>
+            <a href="{% url 'clients:mailing_delete' object.id %}" 
+               class="btn btn-outline-danger btn-sm"
+               onclick="return confirm('Вы уверены, что хотите удалить эту рассылку? Это действие необратимо.')">
+                <i class="bi bi-trash"></i> Удалить
+            </a>
+            <a href="{% url 'clients:mailing_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Назад к списку
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Основная информация</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 40%;">Статус:</th>
+                        <td>
+                            <span class="badge {% if object.status == 'completed' %}bg-success
+                                             {% elif object.status == 'started' %}bg-primary
+                                             {% else %}bg-secondary{% endif %}">
+                                {{ object.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Дата создания:</th>
+                        <td>{{ object.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата обновления:</th>
+                        <td>{{ object.updated_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата начала:</th>
+                        <td>{{ object.start_time|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата окончания:</th>
+                        <td>{{ object.end_time|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Кол-во получателей:</th>
+                        <td>{{ object.recipients.count }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="col-md-6">
+                <h5>Сообщение</h5>
+                <div class="card
+                    <div class="card-body">
+                        <h6 class="card-title">{{ object.message.subject }}</h6>
+                        <div class="card-text">
+                            {{ object.message.body|linebreaks }}
+                        </div>
+                        <div class="mt-2 text-muted small">
+                            Создано: {{ object.message.created_at|date:"d.m.Y H:i" }}
+                            {% if object.message.updated_at != object.message.created_at %}
+                                <br>Обновлено: {{ object.message.updated_at|date:"d.m.Y H:i" }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="mb-3">Получатели ({{ object.recipients.count }})</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>ФИО</th>
+                        <th>Email</th>
+                        <th>Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recipient in object.recipients.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ recipient.full_name }}</td>
+                        <td>{{ recipient.email }}</td>
+                        <td>{{ recipient.comment|default:"-"|truncatechars:50 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Логи рассылки -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-list-check"></i> История отправок
+            <button class="btn btn-sm btn-outline-secondary float-end refresh-logs" title="Обновить">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Дата</th>
+                        <th>Получатель</th>
+                        <th>Статус</th>
+                        <th>Ответ сервера</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    {% for log in object.logs.all|slice:":10" %}
+                    <tr class="{% if log.status == 'success' %}table-success{% else %}table-danger{% endif %}">
+                        <td>{{ log.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>{{ log.recipient_email }}</td>
+                        <td>
+                            <span class="badge {% if log.status == 'success' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ log.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ log.server_response|default:"-"|truncatechars:50 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">
+                            Нет данных о выполнении рассылки
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения отправки -->
+<div class="modal fade" id="sendMailingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение отправки</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите отправить эту рассылку сейчас?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Сообщения будут отправлены всем выбранным получателям немедленно.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirmSend">
+                    <i class="bi bi-send"></i> Отправить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Обработка клика по кнопке отправки рассылки
+    $('.send-mailing').on('click', function(e) {
+        e.preventDefault();
+        $('#sendMailingModal').modal('show');
+    });
+
+    // Подтверждение отправки
+    $('#confirmSend').on('click', function() {
+        const $button = $('.send-mailing');
+        const url = $button.data('url');
+
+        // Блокируем кнопку на время отправки
+        $button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...');
+
+        // Закрываем модальное окно
+        $('#sendMailingModal').modal('hide');
+
+        // Показываем уведомление о начале отправки
+        showAlert('Рассылка запущена. Пожалуйста, подождите...', 'info');
+
+        // Отправляем AJAX-запрос
+        $.ajax({
+            url: url,
+            method: 'POST',
+            headers: {
+                'X-CSRFTTOKEN': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            success: function(response) {
+                // Если сервер вернул HTML (перенаправление), перезагружаем страницу
+                if (typeof response === 'string' && response.includes('<!DOCTYPE')) {
+                    window.location.reload();
+                    return;
+                }
+                
+                // Если вернулся JSON (старый формат)
+                if (response.status === 'success') {
+                    // Обновляем статус на странице
+                    $('.badge').removeClass('bg-secondary').addClass('bg-primary').text('Запущена');
+
+                    // Обновляем кнопку
+                    $button.remove();
+
+                    // Показываем уведомление об успехе
+                    showAlert('Рассылка успешно запущена!', 'success');
+                } else {
+                    showAlert(response.message || 'Произошла ошибка', 'danger');
+                    $button.prop('disabled', false).html('<i class="bi bi-send"></i> Отправить сейчас');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Произошла ошибка при отправке рассылки';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        errorMessage = response.message;
+                    }
+                } catch (e) {
+                    console.error('Ошибка при разборе ответа сервера:', e);
+                }
+                showAlert(errorMessage, 'danger');
+                $button.prop('disabled', false).html('<i class="bi bi-send"></i> Отправить сейчас');
+            }
+        });
+    });
+
+    // Функция для отображения уведомлений
+    function showAlert(message, type) {
+        // Удаляем старые уведомления
+        $('.alert-dismissible').alert('close');
+
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+
+        // Вставляем уведомление в начало контента
+        $('.content').prepend(alertHtml);
+
+        // Автоматически скрываем уведомление через 5 секунд
+        setTimeout(() => {
+            $('.alert').alert('close');
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

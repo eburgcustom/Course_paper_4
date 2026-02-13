@@ -1,0 +1,187 @@
+{% extends 'clients/base.html' %}
+
+{% block title %}{% if object %}Редактирование рассылки{% else %}Новая рассылка{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">
+            <i class="bi bi-{% if object %}pencil-square{% else %}plus-circle{% endif %}"></i>
+            {% if object %}Редактирование рассылки{% else %}Новая рассылка{% endif %}
+        </h4>
+    </div>
+    <div class="card-body">
+        <form method="post" id="mailingForm">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.start_time.id_for_label }}" class="form-label">
+                        {{ form.start_time.label }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    {{ form.start_time }}
+                    {% if form.start_time.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.start_time.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">
+                        Укажите дату и время начала рассылки
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <label for="{{ form.end_time.id_for_label }}" class="form-label">
+                        {{ form.end_time.label }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    {{ form.end_time }}
+                    {% if form.end_time.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.end_time.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">
+                        Укажите дату и время окончания рассылки
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.message.id_for_label }}" class="form-label">
+                    {{ form.message.label }}
+                    <span class="text-danger">*</span>
+                </label>
+                {{ form.message }}
+                {% if form.message.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.message.errors|join:", " }}
+                    </div>
+                {% endif %}
+                <div class="form-text">
+                    Выберите сообщение для рассылки или 
+                    <a href="{% url 'clients:message_create' %}?next={{ request.path|urlencode }}" target="_blank">
+                        создайте новое
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">
+                    {{ form.recipients.label }}
+                    <span class="text-danger">*</span>
+                </label>
+                
+                {% if form.recipients.errors %}
+                    <div class="alert alert-danger">
+                        {{ form.recipients.errors|join:", " }}
+                    </div>
+                {% endif %}
+                
+                <div class="row">
+                    {% for recipient in form.recipients %}
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check">
+                                {{ recipient.tag }}
+                                <label class="form-check-label" for="{{ recipient.id_for_label }}">
+                                    {{ recipient.choice_label }}
+                                </label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-2">
+                    <a href="{% url 'clients:recipient_create' %}?next={{ request.path|urlencode }}" 
+                       class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="bi bi-plus-circle"></i> Добавить получателя
+                    </a>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{% if object %}{% url 'clients:mailing_detail' object.id %}{% else %}{% url 'clients:mailing_list' %}{% endif %}" 
+                       class="btn btn-secondary me-2">
+                        <i class="bi bi-arrow-left"></i> Назад
+                    </a>
+                    <a href="{% url 'clients:recipient_list' %}?next={% url 'clients:mailing_create' %}" 
+                       class="btn btn-outline-info">
+                        <i class="bi bi-people"></i> Управление получателями
+                    </a>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Сохранить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Инициализация календаря
+    $('input[type="datetime-local"]').attr('type', 'datetime-local');
+    
+    // Валидация формы
+    $('#mailingForm').on('submit', function(e) {
+        let isValid = true;
+        const now = new Date();
+        
+        // Проверка даты начала
+        const startTime = new Date($('#id_start_time').val());
+        if (startTime && startTime < now) {
+            alert('Дата начала не может быть в прошлом');
+            isValid = false;
+        }
+        
+        // Проверка даты окончания
+        const endTime = new Date($('#id_end_time').val());
+        if (startTime && endTime && endTime <= startTime) {
+            alert('Дата окончания должна быть позже даты начала');
+            isValid = false;
+        }
+        
+        // Проверка выбора сообщения
+        if (!$('#id_message').val()) {
+            alert('Пожалуйста, выберите сообщение для рассылки');
+            isValid = false;
+        }
+        
+        // Проверка выбора получателей
+        if ($('input[name="recipients"]:checked').length === 0) {
+            alert('Пожалуйста, выберите хотя бы одного получателя');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Блокируем кнопку отправки, чтобы избежать двойного нажатия
+        $(this).find('button[type="submit"]')
+            .prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Сохранение...');
+    });
+    
+    // Простая валидация формы
+    $('#mailingForm').on('submit', function() {
+        const $submitBtn = $(this).find('button[type="submit"]');
+        $submitBtn.prop('disabled', true)
+                  .html('<span class="spinner-border spinner-border-sm me-2"></span>Сохранение...');
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

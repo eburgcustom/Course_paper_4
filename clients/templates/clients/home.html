@@ -1,0 +1,91 @@
+{% extends "clients/base.html" %}
+{% load math_filters %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Статистика рассылок</h1>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Всего рассылок</h5>
+                    <p class="card-text display-4">{{ total_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Активные и запланированные</h5>
+                    <p class="card-text display-4">{{ active_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Уникальные получатели</h5>
+                    <p class="card-text display-4">{{ unique_recipients }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Всего отправок</h5>
+                    <p class="card-text display-4">{{ total_attempts }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Успешные отправки</h5>
+                    <p class="card-text display-4">{{ successful_attempts }}</p>
+                    {% if total_attempts > 0 %}
+                        <small class="text-white-50">
+                            Успешность: {{ successful_attempts|mul:100|div:total_attempts|floatformat:1 }}%
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Неуспешные отправки</h5>
+                    <p class="card-text display-4">{{ failed_attempts }}</p>
+                    {% if total_attempts > 0 %}
+                        <small class="text-white-50">
+                            Процент ошибок: {{ failed_attempts|mul:100|div:total_attempts|floatformat:1 }}%
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>Последние рассылки</h3>
+        <div class="list-group">
+            {% for mailing in latest_mailings %}
+            <a href="{% url 'clients:mailing_detail' mailing.id %}"
+               class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ mailing.message.subject }}</h5>
+                    <small>{{ mailing.get_status_display }}</small>
+                </div>
+                <p class="mb-1">{{ mailing.message.body|truncatechars:100 }}</p>
+                <small>Создано: {{ mailing.created_at|date:"d.m.Y H:i" }}</small>
+            </a>
+            {% empty %}
+            <div class="alert alert-info">Нет доступных рассылок</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
